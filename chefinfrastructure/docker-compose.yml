@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16
+    container_name: cah-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    # Only starts in full-Docker mode
+    profiles: ["prod"]
+    build:
+      context: ${BACKEND_PATH}
+    container_name: cah-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SERVER_PORT: 8080
+    ports:
+      - "${BACKEND_PORT}:8080"
+
+  frontend:
+    # Only starts in full-Docker mode
+    profiles: ["prod"]
+    build:
+      context: ${FRONTEND_PATH}
+    container_name: cah-frontend
+    depends_on:
+      - backend
+    environment:
+      # Inside Docker the backend is reachable by service name
+      NEXT_PUBLIC_API_BASE_URL: http://backend:8080
+    ports:
+      - "${FRONTEND_PORT}:3000"
+
+volumes:
+  db-data:
