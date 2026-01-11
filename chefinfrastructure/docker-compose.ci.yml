@@ -37,4 +37,4 @@ services:
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://backend:8080
     ports:
-      - "3001:3001"
+      - "3001:3000"
