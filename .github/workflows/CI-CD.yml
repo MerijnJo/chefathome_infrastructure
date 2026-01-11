@@ -59,7 +59,7 @@ jobs:
 
       - name: Build frontend Docker image
         run: |
-          cd frontend
+          cd frontend/cheffrontend
           docker build -t chefathome-frontend .
 
       - name: Create .env file for docker-compose
