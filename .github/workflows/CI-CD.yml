@@ -70,17 +70,17 @@ jobs:
           POSTGRES_PASSWORD=test
           DB_PORT=5432
           BACKEND_PORT=8080
-          FRONTEND_PORT=3000
+          FRONTEND_PORT=3001
           EOF
 
       - name: Start full stack with Docker Compose
         run: |
-          docker compose -f docker-compose.ci.yml up -d
+          docker compose -f chefinfrastructure/docker-compose.ci.yml up -d
           sleep 30
 
       - name: Check container status
         run: |
-          docker compose -f docker-compose.ci.yml ps
+          docker compose -f chefinfrastructure/docker-compose.ci.yml ps
           echo "=== Backend logs ==="
           docker logs cah-backend --tail 50
           echo "=== Frontend logs ==="
@@ -95,7 +95,7 @@ jobs:
       - name: Wait for frontend
         run: |
           echo "Checking frontend..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null; do echo "Waiting..."; sleep 2; done'
+          timeout 60 bash -c 'until curl -sf http://localhost:3001 > /dev/null; do echo "Waiting..."; sleep 2; done'
           echo "✅ Frontend is responding!"
 
       - name: Run E2E tests (Playwright)
@@ -117,7 +117,7 @@ jobs:
 
       - name: Stop Docker Compose
         if: always()
-        run: docker compose -f docker-compose.ci.yml down
+        run: docker compose -f chefinfrastructure/docker-compose.ci.yml down
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -228,4 +228,3 @@ jobs:
           echo "🚀 Ready to deploy:"
           echo "   - Backend: ${{ secrets.DOCKER_USERNAME }}/chefathome-backend:latest"
           echo "   - Frontend: ${{ secrets.DOCKER_USERNAME }}/chefathome-frontend:latest"
-
